@@ -70,16 +70,17 @@ type Classifier interface {
 
 type googleClassifier struct {
 	classifier *licenseclassifier.License
+	override   map[string]Type
 }
 
 // NewClassifier creates a classifier that requires a specified confidence threshold
 // in order to return a positive license classification.
-func NewClassifier(confidenceThreshold float64) (Classifier, error) {
+func NewClassifier(confidenceThreshold float64, override map[string]Type) (Classifier, error) {
 	c, err := licenseclassifier.New(confidenceThreshold)
 	if err != nil {
 		return nil, err
 	}
-	return &googleClassifier{classifier: c}, nil
+	return &googleClassifier{classifier: c, override: override}, nil
 }
 
 // Identify returns the name and type of a license, given its file path.
@@ -97,5 +98,10 @@ func (c *googleClassifier) Identify(licensePath string) (string, Type, error) {
 		return "", "", fmt.Errorf("unknown license")
 	}
 	licenseName := matches[0].Name
+	if c.override != nil {
+		if t, ok := c.override[licenseName]; ok {
+			return licenseName, t, nil
+		}
+	}
 	return licenseName, Type(licenseclassifier.LicenseType(licenseName)), nil
 }

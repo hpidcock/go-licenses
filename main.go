@@ -16,9 +16,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/google/go-licenses/licenses"
 	"github.com/spf13/cobra"
 )
 
@@ -29,10 +31,12 @@ var (
 
 	// Flags shared between subcommands
 	confidenceThreshold float64
+	licenseOverride     map[string]string
 )
 
 func init() {
 	rootCmd.PersistentFlags().Float64Var(&confidenceThreshold, "confidence_threshold", 0.9, "Minimum confidence required in order to positively identify a license.")
+	rootCmd.PersistentFlags().StringToStringVar(&licenseOverride, "override", map[string]string{}, "License type overrides")
 }
 
 func main() {
@@ -50,4 +54,37 @@ func unvendor(importPath string) string {
 		return vendorerAndVendoree[1]
 	}
 	return importPath
+}
+
+// parseLicenseOverrides parses and returns the overriden licenses types.
+func parseLicenseOverrides() (map[string]licenses.Type, error) {
+	if licenseOverride == nil {
+		return nil, nil
+	}
+	res := map[string]licenses.Type{}
+	for k, v := range licenseOverride {
+		t := licenses.Type(v)
+		switch t {
+		case licenses.Restricted,
+			licenses.Reciprocal,
+			licenses.Notice,
+			licenses.Permissive,
+			licenses.Unencumbered,
+			licenses.Forbidden:
+			res[k] = t
+		default:
+			return nil, fmt.Errorf(
+				"license named %q override value %q must be one of %+q",
+				k, v, []licenses.Type{
+					licenses.Restricted,
+					licenses.Reciprocal,
+					licenses.Notice,
+					licenses.Permissive,
+					licenses.Unencumbered,
+					licenses.Forbidden,
+				},
+			)
+		}
+	}
+	return res, nil
 }

@@ -43,9 +43,14 @@ func init() {
 }
 
 func csvMain(_ *cobra.Command, args []string) error {
+	overrides, err := parseLicenseOverrides()
+	if err != nil {
+		return err
+	}
+
 	writer := csv.NewWriter(os.Stdout)
 
-	classifier, err := licenses.NewClassifier(confidenceThreshold)
+	classifier, err := licenses.NewClassifier(confidenceThreshold, overrides)
 	if err != nil {
 		return err
 	}

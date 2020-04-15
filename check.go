@@ -37,7 +37,12 @@ func init() {
 }
 
 func checkMain(_ *cobra.Command, args []string) error {
-	classifier, err := licenses.NewClassifier(confidenceThreshold)
+	overrides, err := parseLicenseOverrides()
+	if err != nil {
+		return err
+	}
+
+	classifier, err := licenses.NewClassifier(confidenceThreshold, overrides)
 	if err != nil {
 		return err
 	}
@@ -52,7 +57,7 @@ func checkMain(_ *cobra.Command, args []string) error {
 			return err
 		}
 		if licenseType == licenses.Forbidden {
-			fmt.Fprintf(os.Stderr, "Forbidden license type %s for library %v\n", licenseName, lib)
+			fmt.Fprintf(os.Stderr, "Forbidden license type %q for library %v\n", licenseName, lib)
 			os.Exit(1)
 		}
 	}

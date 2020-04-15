@@ -85,7 +85,7 @@ func TestIdentify(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			c, err := NewClassifier(test.confidence)
+			c, err := NewClassifier(test.confidence, nil)
 			if err != nil {
 				t.Fatalf("NewClassifier(%v) = (_, %q), want (_, nil)", test.confidence, err)
 			}
